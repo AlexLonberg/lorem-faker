@@ -1,0 +1,39 @@
+{
+  "name": "lorem-faker",
+  "version": "0.1.0",
+  "description": "Lorem Ipsum fake generator.",
+  "author": "Alexander Lonberg <alexlonberg@gmail.com>",
+  "homepage": "https://github.com/AlexLonberg/lorem-faker",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/AlexLonberg/lorem-faker.git"
+  },
+  "license": "MIT",
+  "keywords": [
+    "Lorem Ipsum"
+  ],
+  "types": "./src/index.d.ts",
+  "scripts": {
+    "test": "vitest run --coverage --config vitest.config.ts",
+    "predist": "node ./scripts/dist.js",
+    "dist": "tsc --project tsconfig.dist.json"
+  },
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@eslint/js": "^9.23.0",
+    "@stylistic/eslint-plugin": "^4.2.0",
+    "@vitest/coverage-v8": "^3.0.9",
+    "eslint": "^9.23.0",
+    "nodejs-pkg-tools": "^0.5.0",
+    "typescript": "^5.8.2",
+    "typescript-eslint": "^8.28.0",
+    "vitest": "^3.0.9"
+  },
+  "exports": {
+    ".": {
+      "import": "./src/index.ts"
+    }
+  },
+  "main": "./src/index.ts"
+}
