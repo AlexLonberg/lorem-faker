@@ -1,5 +1,5 @@
 import { randomInt } from './utils.js'
-import { loremIpsumWords } from './lorem.js'
+import { loremIpsumWords } from './constants.js'
 
 /** Популярные и наиболее встречающиеся доменные имена первого уровня. */
 const topLevelDomains = Object.freeze([

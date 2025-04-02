@@ -27,6 +27,12 @@ export default defineConfig({
       // Вообще встроенный эксплорер покрытия очень даже не плох.
       // reporter: 'lcov',
       reportsDirectory: '.temp/coverage'
+    },
+    // Config https://vitest.dev/config/#benchmark
+    benchmark: {
+      include: [
+        'src/**/*.bench.ts',
+      ]
     }
   }
 })

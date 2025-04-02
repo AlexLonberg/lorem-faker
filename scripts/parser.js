@@ -28,8 +28,8 @@ const surnameFile = join(tempDir, 'surnames.json')
 
 const text = readFileSync(namesFile, 'utf8')
 const textSurnames = readFileSync(snFile, 'utf8')
-const lines = text.split(/\s/g)
-const surnameLines = textSurnames.split(/\s/g)
+const lines = text.split(/\n/g)
+const surnameLines = textSurnames.split(/\n/g)
 
 const male = new Set()
 const female = new Set()

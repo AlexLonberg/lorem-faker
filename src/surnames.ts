@@ -54,7 +54,6 @@ const surnames = Object.freeze([
   'Phillips',
   'Evans',
   'Turner',
-  'Diaz',
   'Parker',
   'Cruz',
   'Edwards',

@@ -1,5 +1,5 @@
 import { test, expect } from 'vitest'
-import { loremIpsumWords } from './lorem.js'
+import { loremIpsumWords } from './constants.js'
 import {
   topLevelDomains,
   // type TTopLevelDomain,

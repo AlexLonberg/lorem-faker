@@ -1,208 +1,235 @@
-import { countDigits, validateRanges } from './utils.js'
-import { phone } from './person.js'
+import { isNumber, isString, randomIntAsStr } from './utils.js'
+import { NumTupleGenerator } from './num.js'
 
-/**
- * Формат генерации телефонного номера.
- *
- *  + `ranges`  - Массив кортежей длиной не менее 3 элементов вида `[[number, number],[...],[...],...]`.
- *  + `lengths` - Массив сопоставленный каждому элементу `ranges` и означающий длину генерируемых символов.
- *
- * ```ts
- * {
- *   ranges: [[7, 8], [450, 999], [0, 999], [0, 99], [0, 99]]
- *   lengths: [1, 3, 3, 2, 2]
- * }
- * // Результат: первые три числа имеют константный формат, остальные добавляются через дефис
- * '+8(456)783-34-04
- * ```
- */
-type TPhoneRangeOptions = {
-  ranges: readonly [number, number][]
-  lengths: readonly number[]
+type _Num = {
+  readonly isNum: true
+  readonly index: number
+  readonly offset: number
+  readonly size: number
+  readonly length: number
+}
+
+type _Text = {
+  readonly isNum: false
+  readonly text: string
 }
 
 /**
- * Генератор фиксированной последовательности числовых значений в заданных диапазонах.
- *
- * Установите параметр типа для комфортного получения и использования `tuple` требуемой длины.
+ * Формат телефона по умолчанию.
  */
-class NumTupleGenerator<T extends number[]> {
-  protected readonly _ranges: [number, number][]
-  protected readonly _primes: number[]
-  protected readonly _offsets: number[]
-  protected readonly _sizes: number[]
-  protected readonly _maxCombinations: number
-  protected _counter: number = 0;
-
-  constructor(ranges: readonly [number, number][]) {
-    this._ranges = ranges.map(([a, b]) => [a, b])
-    this._offsets = ranges.map(([min]) => min)
-    this._sizes = ranges.map(([min, max]) => max - min + 1)
-    this._primes = this._generateCoprimePrimes(this._sizes)
-    this._maxCombinations = this._sizes.reduce((acc, size) => acc * size, 1)
+const defaultPhoneFormat = '+0({450-499}){10-999}-{10-99}-{10-99}'
+const defaultPhone: readonly (_Text | _Num)[] = Object.freeze([
+  {
+    isNum: false,
+    text: '+0('
+  },
+  {
+    isNum: true,
+    index: 0,
+    offset: 450,
+    size: 50,
+    length: 3,
+  },
+  {
+    isNum: false,
+    text: ')'
+  },
+  {
+    isNum: true,
+    index: 1,
+    offset: 10,
+    size: 990,
+    length: 3,
+  },
+  {
+    isNum: false,
+    text: '-'
+  },
+  {
+    isNum: true,
+    index: 2,
+    offset: 10,
+    size: 90,
+    length: 2,
+  },
+  {
+    isNum: false,
+    text: '-'
+  },
+  {
+    isNum: true,
+    index: 3,
+    offset: 10,
+    size: 90,
+    length: 2,
   }
+].map((v) => Object.freeze(v) as (_Text | _Num)))
 
-  get length (): number {
-    return this._ranges.length
-  }
+function parsePhoneTemplate (template: string): (_Num | _Text)[] {
+  const parts: (_Num | _Text)[] = []
 
-  get ranges (): [number, number][] {
-    return this._ranges.map(([a, b]) => [a, b])
-  }
+  let index = 0
+  let lastIndex = 0
 
-  get maxCombinations (): number {
-    return this._maxCombinations
-  }
-
-  get counter (): number {
-    return this._counter
-  }
-
-  next (): T {
-    // if (this.counter >= this._maxCombinations) return null
-
-    const tuple: number[] = []
-    for (let i = 0; i < this._ranges.length; i++) {
-      const prime = this._primes[i]!
-      const size = this._sizes[i]!
-      const offset = this._offsets[i]!
-
-      // Корректная формула с взаимно простыми числами
-      const value = offset + ((prime * this._counter) % size)
-      tuple.push(value)
-    }
-
-    this._counter++
-    return tuple as T
-  }
-
-  gen (num: number): T[] {
-    const records = []
-    for (let i = 0; i < num; ++i) {
-      records.push(this.next())
-    }
-    return records
-  }
-
-  protected _generateCoprimePrimes (sizes: number[]): number[] {
-    return sizes.map(size => {
-      let candidate = size
-      while (true) {
-        candidate = this._nextPrime(candidate)
-        if (this._gcd(candidate, size) === 1) return candidate
-        candidate++
-      }
-    })
-  }
-
-  protected _gcd (a: number, b: number): number {
-    return b === 0 ? a : this._gcd(b, a % b)
-  }
-
-  protected _nextPrime (n: number): number {
-    while (!this._isPrime(n)) n++
-    return n
-  }
-
-  protected _isPrime (n: number): boolean {
-    for (let i = 2; i <= Math.sqrt(n); i++) {
-      if (n % i === 0) return false
-    }
-    return n > 1
-  }
-
-  reset (): void {
-    this._counter = 0
-  }
-}
-
-function parseRanges (ranges_?: undefined | null | TPhoneRangeOptions): TPhoneRangeOptions {
-  const ranges = validateRanges(ranges_?.ranges)
-  if (ranges.length < 3) {
-    return { lengths: [1, 3, 3, 2, 2], ranges: [[7, 8], [450, 499], [10, 999], [10, 99], [10, 99]] }
-  }
-  const custom: number[] = Array.isArray(ranges_?.lengths) ? ranges_.lengths.map((v) => Number.isInteger(v) && v > 0 ? v : 0) : []
-  const lengths = []
-  for (let i = 0; i < ranges.length; ++i) {
-    if (custom.length > i) {
-      lengths.push(custom[i]!)
+  const addText = (text: string) => {
+    if (parts.length > 0 && !parts[parts.length - 1]!.isNum) {
+      (parts[parts.length - 1] as { text: string }).text += text
     }
     else {
-      lengths.push(countDigits(ranges[1]![i]!))
+      parts.push({
+        isNum: false,
+        text
+      })
     }
   }
-  return { ranges, lengths }
+
+  const addRange = (value: string) => {
+    const pair = value.replace(/\{|\}/g, '').split('-').map((v) => [v.trim().length, Number.parseInt(v, 10)])
+    const length = Math.max(pair[0]![0]!, pair[1]![0]!)
+    const offset = pair[0]![1]!
+    const size = Math.abs(pair[1]![1]! - offset)
+    if (size === 0) {
+      addText(offset.toString().padStart(length, '0'))
+    }
+    else {
+      parts.push({
+        isNum: true,
+        index,
+        offset,
+        size: size + 1,
+        length
+      })
+      index++
+    }
+  }
+
+  const addNum = (value: string) => {
+    const length = value.trim().length
+    const v = Number.parseInt(value, 10)
+    if (v === 0) {
+      addText('0'.padStart(length, '0'))
+    }
+    else {
+      parts.push({
+        isNum: true,
+        index,
+        offset: 0,
+        size: v + 1,
+        length
+      })
+      index++
+    }
+  }
+
+  const addInRange = (value: string) => {
+    addNum(value.replace(/\{|\}/g, ''))
+  }
+
+  for (const item of template.matchAll(/(\{[0-9]+-[0-9]+\})|(\{[0-9]+\})|([0-9]+)/g)) {
+    const [match, range, braces, num] = item
+    const i = item.index
+
+    if (lastIndex < i) {
+      addText(template.substring(lastIndex, i))
+    }
+    lastIndex = i + match.length
+
+    if (range) {
+      addRange(range)
+    }
+    else if (braces) {
+      addInRange(braces)
+    }
+    else if (num) {
+      addNum(num)
+    }
+    else {
+      // @ts-expect-error
+      console.error('Неопределенная ошибка при поиске совпадений шаблона телефонного номера.')
+    }
+  }
+
+  return Object.freeze(parts.map((v) => Object.freeze(v))) as (_Num | _Text)[]
 }
 
 /**
- * Генератор простого телефонного номера в формате `+code(999)999-99-99`.
+ * Генератор телефонного номера.
  */
 class PhoneGenerator {
-  // По факту неизвестно сколько пользователь передаст в параметр, но минимум три элемента
-  protected readonly _tupleGen: NumTupleGenerator<[number, number, number, ...number[]]>
-  protected readonly _format: readonly number[]
+  protected readonly _gen: NumTupleGenerator<number[]>
+  protected readonly _parts: readonly (_Text | _Num)[]
 
   /**
-   * @param ranges
+   * @param format Формат телефонного номера.
    */
-  constructor(ranges?: undefined | null | TPhoneRangeOptions) {
-    const options = parseRanges(ranges)
-    this._format = Object.freeze(options.lengths)
-    this._tupleGen = new NumTupleGenerator(options.ranges)
+  constructor(format?: undefined | null | string) {
+    this._parts = isString(format) ? parsePhoneTemplate(format) : defaultPhone
+    const ranges: number[] = []
+    for (const item of this._parts) {
+      if (item.isNum) {
+        ranges[item.index] = item.size
+      }
+    }
+    this._gen = new NumTupleGenerator<number[]>(ranges)
   }
 
-  get maxCombinations (): number {
-    return this._tupleGen.maxCombinations
+  get maxCombinations (): bigint {
+    return this._gen.size
   }
 
   /**
    * Возвращает следующий доступный номер.
    */
   next (): string {
-    const tuple = this._tupleGen.next()
-    let result = `+${tuple[0].toString().padStart(this._format[0]!, '0')}(${tuple[1].toString().padStart(this._format[1]!, '0')})${tuple[2].toString().padStart(this._format[2]!, '0')}`
-    for (let i = 3; i < this._tupleGen.length; ++i) {
-      result += `-${tuple[i]!.toString().padStart(this._format[i]!, '0')}`
+    const tuple = this._gen.next()
+    const parts = []
+    for (let i = 0; i < this._parts.length; ++i) {
+      const part = this._parts[i]!
+      if (part.isNum) {
+        parts.push((part.offset + tuple[part.index]!).toString().padStart(part.length, '0'))
+      }
+      else {
+        parts.push(part.text)
+      }
     }
-    return result
+    return parts.join('')
   }
 
   /**
-   * Генерирует список уникальных номеров.
+   * Возвращает итерируем объект получения уникальных телефонных номеров.
    *
-   * @param num Требуемое количество.
+   * @param num Требуемое количество итераций.
    */
-  gen (num: number): string[] {
+  *generate (num: number): Generator<string, void, undefined> {
     this.reset()
-    const result: string[] = []
-    if (num < 1) {
-      return result
+    if (!isNumber(num) || (num = Math.round(num)) < 1) {
+      return
     }
     for (let i = 0; i < num; ++i) {
-      result.push(this.next())
+      yield this.next()
     }
-    return result
   }
 
   /**
    * Сбрасывает счетчик номеров.
    */
   reset () {
-    this._tupleGen.reset()
-  }
-
-  /**
-   * Случайный телефон в простом формате `+code(999)999-99-99`.
-   *
-   * @param code Если не указано, код будет случаным от `1` до `999`.
-   */
-  static phone (code?: undefined | null | number): string {
-    return phone(code)
+    this._gen.reset()
   }
 }
 
+/**
+ * Случайный телефон в простом формате `+0(999)999-99-99`.
+ *
+ * Для любого формата и множества уникальных номеров используйте класс {@link PhoneGenerator}.
+ */
+function phone (): string {
+  return `+0(${randomIntAsStr(1, null, 3)})${randomIntAsStr(0, null, 3)}-${randomIntAsStr(0, null, 2)}-${randomIntAsStr(0, null, 2)}`
+}
+
 export {
-  type TPhoneRangeOptions,
-  NumTupleGenerator,
-  PhoneGenerator
+  defaultPhoneFormat,
+  parsePhoneTemplate,
+  PhoneGenerator,
+  phone
 }

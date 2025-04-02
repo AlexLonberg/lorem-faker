@@ -23,10 +23,10 @@
       // "autoAttachChildProcesses": false,
       // Для передачи файла можно использовать как program, так и args,
       // разница будет в пути: program - '.\src\some.ts', или абсолютный с args - 'C:\...\some.ts'
-      "program": "${file}",
-      // "args": [
-      //   "${file}"
-      // ],
+      // "program": "${file}",
+      "args": [
+        "${file}"
+      ],
     }
   ]
 }

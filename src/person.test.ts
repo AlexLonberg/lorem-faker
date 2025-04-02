@@ -10,7 +10,10 @@ import {
   name,
   fullName,
   email,
-  phone
+  // type TPersonOptions,
+  // type TGender,
+  // PersonGeneratorContext,
+  PersonGenerator
 } from './person.js'
 
 const allNames = [...maleNames, ...femaleNames]
@@ -24,10 +27,6 @@ function mailTest (x: string): boolean {
     surnames.includes(s.substring(0, 1).toUpperCase() + s.substring(1).toLowerCase()) &&
     // @ts-expect-error
     safeMailDomains.includes('@' + m)
-}
-
-function phoneTest (p: string): boolean {
-  return /^\+[0-9]+\([0-9]{3}\)[0-9]{3}-[0-9]{2}-[0-9]{2}$/.test(p)
 }
 
 test('names', () => {
@@ -70,9 +69,29 @@ test('email', () => {
   expect(userEmail.startsWith(prefix)).toBe(true)
 })
 
-test('phone', () => {
-  expect(phoneTest(phone())).toBe(true)
-  const userPhone = phone(7)
-  expect(phoneTest(userPhone)).toBe(true)
-  expect(userPhone.startsWith('+7')).toBe(true)
+test('PersonGenerator', () => {
+  const gen = new PersonGenerator({ ageRange: { min: 30, max: 40 } })
+
+  const idCache = new Set()
+  const loginCache = new Set()
+  const emailCache = new Set()
+  let index = 0
+  for (const ctx of gen.generate(3)) {
+    expect(index).toBe(ctx.index())
+    ++index
+    const id = ctx.id()
+    const login = ctx.login()
+    const email = ctx.email()
+    expect(idCache.has(id)).toBe(false)
+    idCache.add(id)
+    expect(loginCache.has(login)).toBe(false)
+    loginCache.add(login)
+    expect(emailCache.has(email)).toBe(false)
+    emailCache.add(email)
+    expect(`${ctx.name()} ${ctx.surname()}`).toBe(ctx.fullName())
+    const age = ctx.age()
+    expect(30 <= age && age <= 40).toBe(true)
+    const gender = ctx.gender()
+    expect(gender === 'female' || gender === 'male').toBe(true)
+  }
 })

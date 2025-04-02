@@ -1,6 +1,6 @@
 {
   "name": "lorem-faker",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Lorem Ipsum fake generator.",
   "author": "Alexander Lonberg <alexlonberg@gmail.com>",
   "homepage": "https://github.com/AlexLonberg/lorem-faker",
@@ -16,7 +16,8 @@
   "scripts": {
     "test": "vitest run --coverage --config vitest.config.ts",
     "predist": "node ./scripts/dist.js",
-    "dist": "tsc --project tsconfig.dist.json"
+    "dist": "tsc --project tsconfig.dist.json",
+    "bench": "vitest bench src/any.bench.ts"
   },
   "type": "module",
   "private": true,

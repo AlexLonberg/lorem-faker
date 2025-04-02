@@ -4,23 +4,9 @@ export {
   animal
 } from './animals.js'
 export {
-  topLevelDomains,
-  type TTopLevelDomain,
-  safeMailDomains,
-  type TSafeMailDomain,
-  tld,
-  domain,
-  mailSuffix
-} from './domains.js'
-export {
-  type TRecordResultMap,
-  type TRecordKind,
-  RatioGenerator,
-  Faker
-} from './faker.js'
-export {
-  femaleNames
-} from './femaleNames.js'
+  type TPersonCombinerStrategyOptions,
+  PersonCombiner
+} from './combiner.js'
 export {
   alphabet,
   type TAlphabet,
@@ -32,31 +18,23 @@ export {
   type TLoremIpsumSet,
   type TLoremIpsumMap,
   loremIpsumMap
-} from './lorem.js'
+} from './constants.js'
 export {
-  maleNames
-} from './maleNames.js'
+  topLevelDomains,
+  type TTopLevelDomain,
+  safeMailDomains,
+  type TSafeMailDomain,
+  tld,
+  domain,
+  mailSuffix
+} from './domains.js'
 export {
-  maleName,
-  femaleName,
-  surname,
-  name,
-  fullName,
-  email,
-  phone
-} from './person.js'
+  femaleNames
+} from './femaleNames.js'
 export {
-  type TPhoneRangeOptions,
-  NumTupleGenerator,
-  PhoneGenerator
-} from './phones.js'
-export {
-  surnames
-} from './surnames.js'
-export {
-  loremIpsumOptions,
-  type TSentenceOptions,
-  type TParagraphOptions,
+  loremIpsumDefaultOptions,
+  type TLoremIpsumOptions,
+  validateLoremRange,
   word,
   generateSentenceBlueprint,
   generateSentence,
@@ -64,16 +42,70 @@ export {
   generateParagraphBlueprint,
   generateParagraph,
   paragraph,
-  page
-} from './text.js'
+  post,
+  LoremGenerator
+} from './lorem.js'
+export {
+  maleNames
+} from './maleNames.js'
+export {
+  type TNumGeneratorOptions,
+  NumGenerator,
+  NumMultiGeneratorBase,
+  NumTupleGenerator,
+  NumPermutationGenerator,
+  NumCombinationGenerator
+} from './num.js'
+export {
+  maleName,
+  femaleName,
+  surname,
+  name,
+  fullName,
+  email,
+  type TPersonOptions,
+  type TGender,
+  PersonGeneratorContext,
+  PersonGenerator
+} from './person.js'
+export {
+  defaultPhoneFormat,
+  parsePhoneTemplate,
+  PhoneGenerator,
+  phone
+} from './phones.js'
+export {
+  plants,
+  type TPlant,
+  plant
+} from './plants.js'
+export {
+  ShuffledKeyGenerator
+} from './shuffle.js'
+export {
+  surnames
+} from './surnames.js'
+export {
+  type TRange,
+  type TMinMax
+} from './types.js'
 export {
   hasOwn,
+  isObject,
+  isString,
+  clampStrOrNull,
+  isNumber,
   randomInt,
   normalizeMinMax,
   randomIntSafe,
-  validateMinmax,
-  randomNumAsStr,
   validateRanges,
   countDigits,
-  capitalize
+  validateProbabilityValue,
+  randomIntAsStr,
+  capitalize,
+  calculatePrimeForSfl,
+  calculateBigintCoPrimeForSfl,
+  generatePermutations,
+  generateCombinations,
+  RatioGenerator
 } from './utils.js'
